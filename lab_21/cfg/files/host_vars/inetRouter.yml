@@ -1,0 +1,13 @@
+---
+connection_name: "bond0"
+ip_addr: "192.168.255.1"
+gateway: ''
+mode: balance-rr
+bond_slave:
+  - conn_name: "eth1"
+    ifname: "eth1"
+    master: "{{ connection_name }}"
+  - conn_name: "eth2"
+    ifname: "eth2"
+    master: "{{ connection_name }}"
+...

@@ -1,0 +1,9 @@
+---
+logs:
+ - name: Netdata logs acc
+   path: /var/log/netdata/access.log
+   tag: srv_mon_acc_
+ - name: Netdata logs err
+   path: /var/log/netdata/error.log
+   tag: srv_mon_err_
+...

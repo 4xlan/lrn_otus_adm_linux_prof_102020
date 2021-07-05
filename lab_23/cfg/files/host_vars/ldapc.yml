@@ -1,0 +1,8 @@
+---
+realm: "TD.LOC"
+domain: "td.loc"
+adm_unsec_pswd: 87654321
+dsip: "192.168.50.10"
+server_hostname: "dc.td.loc"
+client_hostname: "client1.td.loc"
+...

@@ -1,0 +1,21 @@
+---
+- name: Disable telemetry
+  file:
+    path: /etc/netdata/.opt-out-from-anonymous-statistics
+    state: touch
+- name: SELinux conf for netdata
+  community.general.seport:
+    ports: 19999
+    proto: tcp
+    setype: ssh_port_t
+- name: Install client conf
+  template:
+    src: mon_rel/netdata_client_stream.conf.j2
+    dest: /etc/netdata/conf.d/stream.conf
+  when: "ansible_hostname in groups['mon_cli']"
+- name: Start monitoring
+  service:
+    name: netdata
+    state: restarted
+    enabled: yes
+...

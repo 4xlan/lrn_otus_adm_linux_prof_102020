@@ -1,0 +1,8 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: I think that's it.
+    debug:
+      msg: "Deploy has been completed. Please, try to visit https://localhost:8443 and https://localhost:8444"
+...

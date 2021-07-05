@@ -1,0 +1,56 @@
+---
+- name: Nginx install
+  yum:
+    name: nginx
+    state: present
+- name: Python3 install
+  yum:
+    name: python3
+    state: present
+- name: Copy certs
+  unarchive:
+    src: prx/cfg.tar.gz
+    dest: /etc/nginx/
+    decrypt: yes
+    owner: nginx
+    group: nginx
+- name: Copy script
+  copy: 
+    src: prx/selinux_script.sh
+    dest: /etc/nginx/script.sh
+    mode: 0775
+- name: Copy config
+  template:
+    src: prx/nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    owner: nginx
+    group: nginx
+- name: Open ports
+  firewalld:
+    port: 443-444/tcp
+    zone: public
+    immediate: yes
+    permanent: yes
+    state: enabled
+- name: SELinux configure
+  shell: /etc/nginx/script.sh
+- name: Add cfg for monitoring
+  template:
+    src: monitoring_templates/nginx_template.j2
+    dest: /etc/netdata/python.d/nginx.conf
+- name: Enable python weblog
+  replace:
+    path: /etc/netdata/conf.d/python.d.conf
+    regexp: '^# web_log: yes$'
+    replace: 'web_log: yes'
+- name: Enable python nginx
+  replace:
+    path: /etc/netdata/conf.d/python.d.conf
+    regexp: '^# nginx: yes$'
+    replace: 'nginx: yes'
+- name: Nginx start
+  service:
+    name: nginx
+    state: restarted
+    enabled: yes
+...

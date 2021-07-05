@@ -1,0 +1,47 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+MACHINES = {
+  :src1 => {
+        :box_name => "centos/8",
+        :net => [
+                 {adapter: 2, virtualbox__intnet: "vl", ip: '192.168.50.10', netmask: '255.255.255.0'},
+                ]
+        },
+  :src2 => {
+        :box_name => "centos/8",
+        :net => [
+                 {adapter: 2, virtualbox__intnet: "vl", ip: '192.168.50.11', netmask: '255.255.255.0'},
+                ]
+        },
+  :src3 => {
+        :box_name => "centos/8",
+        :net => [
+                 {adapter: 2, virtualbox__intnet: "vl", ip: '192.168.50.12', netmask: '255.255.255.0'},
+                ]
+        }
+}
+
+Vagrant.configure(2) do |config|
+
+    MACHINES.each do |boxname, boxconfig|
+        
+        config.vm.define boxname do |box|
+            box.vm.box = boxconfig[:box_name]
+            box.vm.host_name = boxname.to_s
+            
+            boxconfig[:net].each do |ipconf|
+                box.vm.network "private_network", ipconf
+            end
+            
+            box.vm.provider :virtualbox do |vb|
+                vb.customize ["modifyvm", :id, "--memory", "256"]
+            end
+                
+            box.vm.provision "ansible" do |ans|
+                ans.playbook = "files/main.yml"
+                ans.become = "true"
+            end
+        end
+    end
+end

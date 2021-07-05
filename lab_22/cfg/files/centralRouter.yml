@@ -1,0 +1,21 @@
+---
+- hosts: centralRouter
+  become: yes
+  tasks:
+  - name: Install nmap
+    yum:
+      name: nmap
+      state: present
+  - name: Copy script
+    copy:
+      src: "knock_scr.sh"
+      dest: "/home/vagrant/knock_scr.sh"
+      owner: vagrant
+      group: vagrant
+      mode: '0744'
+  - name: Copy bashrc
+    copy:
+      src: "centralRouter.brc"
+      dest: "/home/vagrant/.bashrc"
+      owner: vagrant
+      group: vagrant

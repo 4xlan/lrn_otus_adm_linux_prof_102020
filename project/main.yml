@@ -1,0 +1,51 @@
+---
+- hosts: all
+  become: true
+  tasks:
+   - name: Include secrets
+     include_vars: "secrets.yml"
+   - name: EPEL install
+     dnf:
+       name: epel-release
+       state: present
+   - name: Packages install
+     dnf:
+       name: ['netdata', 'rsyslog', 'policycoreutils-python-utils', 'python3-policycoreutils', 'python3-libselinux']
+       state: present
+   - name: Firewalld start
+     service:
+       name: firewalld
+       state: restarted
+       enabled: yes
+   - name: Open port for monitoring
+     firewalld:
+       zone: public
+       port: 19999/tcp
+       state: enabled
+       immediate: yes
+       permanent: yes
+   - name: Generate rsyslog client cfgs
+     template:
+      src: log_rel/rsyslog.client.j2
+      dest: /etc/rsyslog.conf
+     when: "ansible_hostname in groups['log_cli']"
+   - name: Configure podman
+     include_tasks: "tasks/pdm_rel/podman_install.yml"
+     when: "ansible_hostname in groups['pdm_srv']"
+   - name: Configure components
+     include_tasks: "tasks/hst_rel/{{ ansible_hostname }}.yml"
+   - name: Configure backup
+     include_tasks: "tasks/bkp_rel/main.yml"
+     when: "ansible_hostname in groups['bkp_cli'] or ansible_hostname in groups['bkp_srv']"
+   - name: Configure monitoring
+     include_tasks: "tasks/mon_rel/monitoring_install.yml"
+   - name: Start rsyslog
+     service:
+       name: rsyslog
+       state: restarted
+       enabled: yes
+   - name: Restart Netdata
+     service:
+       name: netdata
+       state: restarted
+...

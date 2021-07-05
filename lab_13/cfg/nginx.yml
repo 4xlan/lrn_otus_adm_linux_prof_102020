@@ -1,0 +1,31 @@
+---
+- hosts: webservers
+  become: true
+  gather_facts: true
+  tasks:
+  - name: Copy repo file
+    copy:
+      src: files/nginx.repo
+      dest: /etc/yum.repos.d/nginx.repo
+    tags: repo-install
+  - name: Install nginx from repo
+    yum:
+      name: nginx
+      state: present
+    tags: nginx-install
+  - name: Copy config file
+    template:
+      src: templates/nginx.conf.j2
+      dest: /etc/nginx/nginx.conf
+    notify:
+    - start nginx
+  handlers:
+  - name: start nginx
+    systemd:
+      name: nginx
+      state: started
+      enabled: true
+...
+
+
+

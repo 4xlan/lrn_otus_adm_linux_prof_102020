@@ -1,0 +1,58 @@
+---
+- name: Open ports
+  firewalld:
+    zone: public
+    port: 5342/tcp
+    immediate: yes
+    permanent: yes
+    state: enabled
+- name: Install pre-requisites for monitoring
+  yum:
+    name: python3-psycopg2
+    state: present
+- name: Create catalog for files
+  file:
+    path: "/opt/postgres/data"
+    state: directory
+    recurse: yes
+- name: Postgres install
+  containers.podman.podman_container:
+    name: db_next
+    image: postgres:11-alpine
+    state: started
+    restart_policy: "on-failure"
+    ports: "5432:5432"
+    volume: "{{ postgres_postgresu_mountpath }}:/var/lib/postgresql/data/:z"
+    env:
+      POSTGRES_DB: "{{ postgres_postgresu_dbname }}"
+      POSTGRES_USER: "{{ postgres_postgresu_username }}"
+      POSTGRES_PASSWORD: "{{ postgres_postgresu_pass }}"
+- name: Setup logging
+  copy:
+    src: pgs/postgresql.conf
+    dest: "{{ postgres_postgresu_mountpath }}/postgresql.conf"
+- name: Restart Postgres
+  containers.podman.podman_container:
+    name: db_next
+    restart: true
+- name: Copy files
+  template:
+    src: pgs/query.sql.j2
+    dest: "{{ postgres_postgresu_mountpath }}/query.sql"
+- name: Copy script
+  template:
+    src: pgs/pgs_script.sh.j2
+    dest: "{{ postgres_postgresu_mountpath }}/script.sh"
+    mode: 0775
+- name: Create user and DB
+  shell: "{{ postgres_postgresu_mountpath }}/script.sh"
+- name: Add cfg for monitoring
+  template:
+    src: monitoring_templates/postgresql_template.j2
+    dest: /etc/netdata/python.d/postgres.conf
+- name: Restart Netdata
+  service:
+    name: netdata
+    state: restarted
+    enabled: true
+...

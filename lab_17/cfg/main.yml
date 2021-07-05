@@ -1,0 +1,20 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: EPEL install
+    yum:
+      name: 'epel-release'
+      state: present
+  - name: Borg install
+    yum:
+      name: 'borgbackup'
+      update_cache: yes
+      state: present
+  - name: Server part
+    include_tasks: bsrv.yml
+    when: "'borgsrv' in group_names"
+  - name: Client part
+    include_tasks: bhst.yml
+    when: "'borggrp' in group_names"
+...

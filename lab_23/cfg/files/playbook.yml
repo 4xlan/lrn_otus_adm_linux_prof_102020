@@ -1,0 +1,34 @@
+---
+- hosts: ldaps
+  become: yes
+  tasks:
+    - name: LDAP server install
+      yum:
+        name: ['ipa-server', 'ipa-server-dns']
+        state: present
+    - name: Script copy
+      template:
+        src: server_script.j2
+        dest: /tmp/script.sh
+        mode: 0755
+    - name: Script start
+      command: /tmp/script.sh
+
+- hosts: ldapc
+  become: yes
+  tasks:
+    - name: LDAP client install
+      yum: 
+        name: ipa-client
+        state: present
+    - name: Add line to hosts
+      lineinfile:
+        path: /etc/hosts
+        line: 192.168.50.10 dc.td.loc
+    - name: Script copy
+      template:
+        src: client_script.j2
+        dest: /tmp/script.sh
+        mode: 0755
+    - name: Script start
+      command: /tmp/script.sh

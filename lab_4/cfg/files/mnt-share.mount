@@ -1,0 +1,14 @@
+[Unit]
+Description=Lab4 Mount
+Requires=NetworkManager.service
+After=NetworkManager.service
+
+[Mount]
+What=192.168.50.10:/srv/nfs/share
+Where=/mnt/share
+Type=nfs
+Options=nfsvers=3,udp
+TimeoutSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,34 @@
+---
+- name: Copy script for data sending
+  template:
+    src: nxt/backup_send.sh.j2
+    dest: "{{ bkp_script_path }}/send.sh"
+    owner: "{{ bkp_remote_user }}"
+    mode: 0750
+- name: Copy script for arch create
+  template:
+    src: nxt/arch_create.sh.j2
+    dest: "{{ bkp_script_path }}/create.sh"
+    owner: "{{ bkp_remote_user }}"
+    mode: 0750
+- name: Add job for archive creating
+  cron:
+    name: Create user data arch
+    user: root
+    job: "{{ bkp_script_path}}/create.sh > /dev/null 2>&1"
+    minute: 0
+    hour: 0
+    day: "*"
+    month: "*"
+    weekday: "*"
+- name: Add job for data sending
+  cron:
+    name: Send NXT data to Borg
+    user: borg
+    job: "{{ bkp_script_path}}/send.sh > /dev/null 2>&1"
+    minute: 5
+    hour: 0
+    day: "*"
+    month: "*"
+    weekday: "*"
+...

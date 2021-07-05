@@ -1,0 +1,14 @@
+---
+common_path: "/opt/services"
+apps:
+  - name: app1
+    app_path: "{{ common_path }}/app1/"
+    internal_port: 18081
+    external_port: 8081
+    msg: "APP: 1"
+  - name: app2
+    app_path: "{{ common_path }}/app2/"
+    internal_port: 18082
+    external_port: 8082
+    msg: "APP: 2"
+...

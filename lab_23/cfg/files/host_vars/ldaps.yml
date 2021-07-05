@@ -1,0 +1,8 @@
+---
+realm: "TD.LOC"
+domain: "td.loc"
+dsu_unsec_pswd: 12345678
+adm_unsec_pswd: 87654321
+dsip: "192.168.50.10"
+hostname: "dc.td.loc"
+...

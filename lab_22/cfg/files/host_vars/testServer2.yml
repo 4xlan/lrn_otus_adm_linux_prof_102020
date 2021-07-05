@@ -1,0 +1,6 @@
+---
+vlanid: 20
+interface: "eth1"
+ip_addr: "10.10.10.1/24"
+gateway: "10.10.10.10"
+...

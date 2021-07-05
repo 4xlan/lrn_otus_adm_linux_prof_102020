@@ -1,0 +1,70 @@
+#!/usr/bin/python3
+
+import os, time
+
+check_filepath = "/opt/nextcloud/config/config.php"
+message_path = "{}/ph_done".format(check_filepath[:check_filepath.rfind("/")])
+request_rate = 1
+pause_before_start = 30
+pidfile = "/opt/nextcloud/config/script.pid"
+found = False
+lines = []
+add_lines = ["    'overwriteprotocol' => 'https',", "    'overwritehost' => 'localhost:8443',"]
+
+
+def leave_message():
+    os.system("touch {}".format(message_path))
+
+
+def add_overwrite():
+    with open(check_filepath, 'r') as cfgfile:
+        for line in cfgfile:
+            lines.append(line.rstrip())
+
+    close_sym = lines.pop()
+
+    for new_line in add_lines:
+        lines.append(new_line)
+
+    lines.append(close_sym)
+
+    with open(check_filepath+".new", 'w') as cfgfile:
+        for line in lines:
+            cfgfile.write("{}\n".format(line))
+
+def create_user():
+    os.system("podman exec -u www-data -it nextcloud_srv bash -c 'export OC_PASS={{ nextcloud_usermon_pass }}; /var/www/html/occ user:add --password-from-env -g admin {{ nextcloud_usermon_login }}; export OC_PASS=no'")
+
+def restart_netdata():
+    os.system("systemctl restart netdata")
+
+def swap_files():
+    os.system("mv {} {}.bkp".format(check_filepath, check_filepath))
+    os.system("mv {}.new {}".format(check_filepath, check_filepath))
+    os.system("chown -R 33:root {}".format(check_filepath))
+
+
+if __name__ == "__main__":
+    print("Starting")
+    os.system("rm {}".format(message_path))
+    if not os.path.isfile(pidfile):
+        os.system("touch {}".format(pidfile))
+        while not found:
+            if os.path.isfile(check_filepath):
+                #print("Config found, waiting for {} sec.".format(pause_before_start))
+                #time.sleep(pause_before_start)
+                print("Adding overwrites")
+                add_overwrite()
+                print("Moving original file to .bkp")
+                swap_files()
+                print("Creating user for netdata")
+                create_user()
+                #print("Restarting Netdata")
+                #restart_netdata()
+                print("Marking task as completed")
+                leave_message()
+                found = True
+            else:
+                time.sleep(request_rate)
+            print("Exiting")
+            os.system("rm {}".format(pidfile))

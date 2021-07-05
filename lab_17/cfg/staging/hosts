@@ -1,0 +1,15 @@
+all:
+  hosts:
+  children:
+    borgsrv:
+      hosts:
+        192.168.11.150
+      vars:
+        ansible_port: 2222
+        ansible_private_key_file: .vagrant/machines/bckpsrv/virtualbox/private_key
+    borggrp:
+      hosts:
+        192.168.11.160  
+      vars:
+        ansible_port: 2220
+        ansible_private_key_file: .vagrant/machines/bckpcln/virtualbox/private_key

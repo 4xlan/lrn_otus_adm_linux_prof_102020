@@ -1,0 +1,13 @@
+---
+- name: Open log port
+  firewalld:
+    zone: public
+    immediate: yes
+    permanent: yes
+    port: 514/tcp
+    state: enabled
+- name: Copy configfile
+  copy:
+    src: log/rsyslog.conf
+    dest: /etc/rsyslog.conf
+...

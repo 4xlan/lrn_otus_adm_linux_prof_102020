@@ -1,0 +1,8 @@
+#!/bin/bash
+
+LOCKFILE_PATH="{{ postgres_postgresu_mountpath }}/.script_lock"
+
+if [[ ! -e $LOCKFILE_PATH ]]; then
+    podman exec -it db_next bash -c 'psql -U postgres -f /var/lib/postgresql/data/query.sql'
+    touch $LOCKFILE_PATH
+fi

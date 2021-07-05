@@ -1,0 +1,7 @@
+---
+bkp_main_cat: "/opt/borg/bckp/"
+logs:
+ - name: Current logs
+   path: /var/log/messsages
+   tag: bkp_def_
+...

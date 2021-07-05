@@ -1,0 +1,63 @@
+---
+- hosts: all
+  become: true
+  tasks:
+   - name: FRR install
+     dnf:
+       name: frr
+       state: present
+   - name: Disable defgw on eth0
+     lineinfile:
+       path: /etc/sysconfig/network-scripts/ifcfg-eth0
+       line: DEFROUTE="no"
+       insertafter: ONBOOT="yes"
+   - name: Enable defgw on eth1
+     lineinfile:
+       path: /etc/sysconfig/network-scripts/ifcfg-eth1
+       line: DEFROUTE="yes"
+       insertafter: ONBOOT="yes"
+   - name: Zebra enable
+     lineinfile:
+       path: /etc/frr/daemons
+       regexp: '^zebra='
+       line: zebra=yes
+   - name: OSPF enable
+     lineinfile:
+       path: /etc/frr/daemons
+       regexp: '^ospfd='
+       line: ospfd=yes
+   - name: rp_filter modifying
+     sysctl:
+       name: net.ipv4.conf.all.rp_filter
+       value: '0'
+   - name: IP forwarding modifying
+     sysctl:
+       name: net.ipv4.conf.all.forwarding
+       value: '1'
+   - name: VLAN configure
+     community.general.nmcli:
+       type: vlan
+       vlanid: "{{ item.vlanid }}"
+       vlandev: "{{ item.interface }}"
+       conn_name: "vlan{{ item.vlanid }}"
+       ip4: "{{ item.ip_addr }}"
+       state: present
+     with_items:
+       - "{{ vlans }}"
+   - name: OSPF configure
+     copy:
+       src: "files/{{ ansible_hostname }}_ospfd.conf"
+       dest: "/etc/frr/ospfd.conf"
+       owner: frr
+       group: frr
+       mode: '0600'
+   - name: Network restart
+     service:
+       name: NetworkManager
+       state: restarted
+   - name: FRR start
+     service:
+       name: frr
+       state: restarted
+       enabled: true
+...

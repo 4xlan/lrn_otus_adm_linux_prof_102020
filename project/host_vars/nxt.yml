@@ -1,0 +1,11 @@
+---
+nextcloud_dbs_addr: "192.168.50.12"
+nextcloud_usermon_login: srv_netdata
+nextcloud_usermon_display: "Netdata user"
+bkp_nxt_path: "/opt/nextcloud/data"
+bkp_rem_dst: "nxt_bkp"
+logs:
+ - name: Nextcloud logs acc
+   path: /opt/nextcloud/data/nextcloud.log
+   tag: nxt_
+...

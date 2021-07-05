@@ -1,0 +1,13 @@
+[Unit]
+Description=Useless app
+After=network.target
+
+[Service]
+Type=simple
+User=nginx
+Group=nginx
+ExecStart="{{ item.app_path }}{{ item.name }}"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

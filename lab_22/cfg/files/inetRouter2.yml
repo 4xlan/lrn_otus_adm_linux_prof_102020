@@ -1,0 +1,38 @@
+---
+- hosts: inetRouter2
+  become: yes
+  tasks:
+  - name: Enable firewalld
+    service:
+      name: firewalld
+      state: started
+      enabled: yes
+  - name: Port forward enable
+    ansible.posix.firewalld:
+      rich_rule: rule family=ipv4 forward-port port=8080 protocol=tcp to-addr=192.168.0.2 to-port=80
+      immediate: yes
+      permanent: yes
+      zone: public
+      state: enabled
+  - name: Masquerade start
+    ansible.posix.firewalld:
+      zone: public
+      masquerade: yes
+      permanent: yes
+      immediate: yes
+      state: enabled
+  - name: Port open 8080 public
+    ansible.posix.firewalld:
+      zone: public
+      port: 8080/tcp
+      permanent: yes
+      immediate: yes
+      state: enabled
+  - name: Port open 8080 internal
+    ansible.posix.firewalld:
+      zone: internal
+      port: 8080/tcp
+      permanent: yes
+      immediate: yes
+      state: enabled
+      

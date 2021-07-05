@@ -1,0 +1,61 @@
+---
+  - name: Copy repo file
+    copy:
+      src: files/web/nginx.repo
+      dest: /etc/yum.repos.d/nginx.repo
+  - name: Install nginx from repo
+    yum:
+      name: nginx
+      state: present
+      update_cache: no
+  - name: Temporairly disable selinux
+    ansible.posix.selinux:
+      policy: targeted
+      state: permissive
+  - name: Copy auditd file
+    copy:
+      src: files/web/auditd.conf
+      dest: /etc/audit/auditd.conf
+  - name: Copy auditsp file
+    template:
+      src: templates/web/audisp-remote.conf.j2
+      dest: /etc/audisp/audisp-remote.conf
+  - name: Copy au-remote file
+    copy:
+      src: files/web/au-remote.conf
+      dest: /etc/audisp/plugins.d/au-remote.conf
+  - name: Copy auditd file
+    copy:
+      src: files/web/audit.rules
+      dest: /etc/audit/audit.rules
+  - name: Re-read rules
+    shell:
+      cmd: auditctl -R /etc/audit/audit.rules
+  - name: Copy config nginx file
+    template:
+      src: templates/web/nginx.conf.j2
+      dest: /etc/nginx/nginx.conf
+  - name: Copy rsyslog file
+    template:
+      src: templates/web/rsyslog_client.conf.j2
+      dest: /etc/rsyslog.conf
+  - name: Open port rsyslog
+    ansible.posix.firewalld:
+      zone: public
+      port: 19532/tcp
+      permanent: yes
+      state: enabled
+      immediate: yes
+  - name: Open port http
+    ansible.posix.firewalld:
+      zone: public
+      port: 8080/tcp
+      permanent: yes
+      state: enabled
+      immediate: yes
+  - name: Start nginx
+    systemd:
+      name: nginx
+      state: restarted
+      enabled: true
+...

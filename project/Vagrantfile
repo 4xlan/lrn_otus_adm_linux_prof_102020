@@ -1,0 +1,83 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+ 
+MACHINES = {
+  :mon => {
+        :box_name => "centos/8",
+        :mem => "1024",
+        :net => {adapter: 2, virtualbox__intnet: "vl", ip: '192.168.50.13', netmask: '255.255.255.0'}
+        },
+  :log => {
+        :box_name => "centos/8",
+        :mem => "256",
+        :net => {adapter: 2, virtualbox__intnet: "vl", ip: '192.168.50.14', netmask: '255.255.255.0'}
+        },
+  :prx => {
+        :box_name => "centos/8",
+        :mem => "512",
+        :net => {adapter: 2, virtualbox__intnet: "vl", ip: '192.168.50.10', netmask: '255.255.255.0'}
+        },
+  :bkp => {
+        :box_name => "centos/8",
+        :mem => "512",
+        :net => {adapter: 2, virtualbox__intnet: "vl", ip: '192.168.50.9', netmask: '255.255.255.0'}
+        },
+  :pgs => {
+        :box_name => "centos/8",
+        :mem => "256",
+        :net => {adapter: 2, virtualbox__intnet: "vl", ip: '192.168.50.12', netmask: '255.255.255.0'},
+        },
+  :nxt => {
+        :box_name => "centos/8",
+        :mem => "1024",
+        :net => {adapter: 2, virtualbox__intnet: "vl", ip: '192.168.50.11', netmask: '255.255.255.0'}
+        }
+}
+
+Vagrant.configure(2) do |config|
+
+    MACHINES.each do |boxname, boxconfig|
+        
+        config.vm.define boxname do |box|
+            box.vm.box = boxconfig[:box_name]
+            box.vm.host_name = boxname.to_s
+     
+            box.vm.network "private_network",:adapter => boxconfig[:net][:adapter], :virtualbox__intnet => boxconfig[:net][:virtualbox__intnet], :ip => boxconfig[:net][:ip], :netmask => boxconfig[:net][:netmask]
+            
+            box.vm.provider :virtualbox do |vb|
+                vb.customize ["modifyvm", :id, "--memory", boxconfig[:mem]]
+            end
+
+            if boxname.to_s == "prx" 
+                box.vm.network "forwarded_port", guest: 443, host: 8443
+                box.vm.network "forwarded_port", guest: 444, host: 8444
+            end
+            
+            box.vm.provision :shell do |s|
+             s.inline = 'mkdir -p ~root/.ssh; cp ~vagrant/.ssh/auth* ~root/.ssh'
+            end
+            
+            box.vm.provision "ansible" do |ans|
+                ans.playbook = "main.yml"
+                ans.vault_password_file = "vault_pass"
+                ans.become = "true"
+                ans.groups = {
+                    "log_cli" => ["prx", "nxt", "pgs", "mon", "bkp"],
+                    "mon_cli" => ["prx", "nxt", "pgs", "log", "bkp"],
+                    "mon_srv" => ["mon"],
+                    "pdm_srv" => ["pgs", "nxt"],
+                    "bkp_cli" => ["pgs", "nxt"],
+                    "bkp_srv" => ["bkp"],
+                }
+            end
+
+            if boxname.to_s == "nxt"
+                box.vm.provision "ansible" do |ans|
+                    ans.playbook = "final.yml"
+                    ans.vault_password_file = "vault_pass"
+                    ans.become = "true"
+                end
+            end
+        end
+    end
+end

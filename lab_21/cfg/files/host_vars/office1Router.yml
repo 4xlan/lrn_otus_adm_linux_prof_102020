@@ -1,0 +1,9 @@
+---
+vlans:
+ - vlanid: 10
+   interface: "eth5"
+   ip_addr: "10.10.10.10/24"
+ - vlanid: 20
+   interface: "eth5"
+   ip_addr: "10.10.10.10/24"
+...

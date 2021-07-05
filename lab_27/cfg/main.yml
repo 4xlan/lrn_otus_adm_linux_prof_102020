@@ -1,0 +1,18 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Percona repofile copy
+      copy:
+        src: "percona-release-latest.noarch.rpm"
+        dest: "/tmp/percona-release-latest.noarch.rpm"
+    - name: Percona repofile install
+      yum:
+        name: "/tmp/percona-release-latest.noarch.rpm"
+        state: present
+    - name: Percona install
+      yum:
+        name: "Percona-Server-server-57"
+        update_cache: yes
+        state: present
+...

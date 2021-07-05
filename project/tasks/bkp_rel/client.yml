@@ -1,0 +1,30 @@
+---
+  - name: Mkdir for scripts
+    file:
+      path: "{{ bkp_script_path }}"
+      state: directory
+      owner: "{{ bkp_remote_user }}"
+  - name: Create file for passphrase
+    file:
+      path: "{{ bkp_passphrase_path }}"
+      state: touch
+      owner: "{{ bkp_remote_user }}"
+      group: "{{ bkp_remote_user }}"
+      mode: 0660
+  - name: Add passphrase
+    lineinfile:
+      path: "{{ bkp_passphrase_path }}"
+      line: "{{ borg_pass }}"
+      owner: "{{ bkp_remote_user }}"
+      state: present
+  - name: Make sure that {{ bkp_src_cat }} is present
+    file:
+      path: "{{ bkp_src_cat }}"
+      state: directory
+      group: borg
+      mode: 0770
+  - name: Init backup
+    shell: sudo su borg -c 'BORG_PASSCOMMAND="cat {{ bkp_passphrase_path }}" borg init --encryption repokey-blake2 {{ bkp_remote_user }}@{{ bkp_srv }}:{{ bkp_main_cat }}{{ bkp_rem_dst }}'
+  - name: Include backup-conf tasks
+    include_tasks: "tasks/bkp_rel/{{ ansible_hostname }}.yml"
+...

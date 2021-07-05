@@ -1,0 +1,51 @@
+package main
+
+import (
+	"context"
+	"log"
+	"net/http"
+)
+
+func main() {
+
+	port := ":{{ item.internal_port }}"
+
+	m := http.NewServeMux()
+	s := http.Server{Addr: port, Handler: m}
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	defer cancel()
+    
+	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("{{ item.msg }}\n"))
+		log.Println("Requested mainpage.")
+	})
+
+	m.HandleFunc("/stop", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Shutdown...\n"))
+		log.Println("Requested server shutdown")
+		cancel()
+	})
+
+	m.HandleFunc("/healthCheck", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("OK.\n"))
+		log.Println("Requested healthcheck.")
+	})
+
+	log.Printf("Starting server at port %v", port)
+
+	go func() {
+		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		s.Shutdown(ctx)
+	}
+
+	log.Println("Program has been closed.")
+
+}

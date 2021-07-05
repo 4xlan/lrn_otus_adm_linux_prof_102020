@@ -1,0 +1,30 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "centos/7"
+
+  config.vm.define "ldaps" do |srv|
+    srv.vm.provider "virtualbox" do |v|
+        v.memory = 2048
+    end
+    srv.vm.network "private_network", ip: "192.168.50.10", virtualbox__intnet: "ld1"
+    srv.vm.hostname = "server"
+  end
+
+  config.vm.define "ldapc" do |cli|
+    cli.vm.provider "virtualbox" do |v|
+        v.memory = 512
+    end
+    cli.vm.network "private_network", ip: "192.168.50.11", virtualbox__intnet: "ld1"
+    cli.vm.hostname = "client"
+  end
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "files/playbook.yml"
+    ansible.become = "true"
+  end
+  
+  config.vm.provision "shell", run: "always", inline: "rm /tmp/script.sh"
+
+end

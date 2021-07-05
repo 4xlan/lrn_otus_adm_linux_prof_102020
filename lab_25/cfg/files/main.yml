@@ -1,0 +1,48 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: EPEL install
+    dnf:
+      name: epel-release
+      state: present
+  - name: OVPN install
+    dnf:
+      name: ['openvpn', 'iperf3']
+      state: present
+- hosts: server
+  become: true
+  tasks:
+  - name: CA unpack
+    unarchive:
+      src: server/ovpn.tar.gz
+      dest: /etc/openvpn/server/
+      owner: root
+      group: root
+      mode: 0640
+  - name: Selinux disable
+    ansible.posix.selinux:
+      policy: targeted
+      state: permissive
+  - name: Start TUN service
+    service:
+      name: openvpn-server@tun
+      state: restarted
+      enabled: yes
+  - name: Start TAP service
+    service:
+      name: openvpn-server@tap
+      state: restarted
+      enabled: yes
+- hosts: client
+  become: true
+  tasks:
+  - name: Client TUN config copy
+    copy:
+      src: client/tun.ovpn
+      dest: /home/vagrant/tun.ovpn
+  - name: Client TAP config copy
+    copy:
+      src: client/tap.ovpn
+      dest: /home/vagrant/tap.ovpn
+...

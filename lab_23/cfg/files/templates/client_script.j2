@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ipa-client-install -U -p admin -w {{ adm_unsec_pswd }} --server={{ server_hostname }} --ip-address={{ dsip }} --domain={{ domain }} --realm={{ realm }} --hostname={{ client_hostname }} --mkhomedir --force-ntpd --force

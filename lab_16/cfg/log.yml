@@ -1,0 +1,20 @@
+---
+  - name: Copy rsyslog file
+    template:
+      src: templates/log/rsyslog_server.conf.j2
+      dest: /etc/rsyslog.conf
+  - name: Open port tcp
+    ansible.posix.firewalld:
+      port: 514/tcp
+      zone: public
+      state: enabled
+      permanent: yes
+      immediate: yes
+  - name: Open port udp
+    ansible.posix.firewalld:
+      port: 514/udp
+      zone: public
+      state: enabled
+      permanent: yes
+      immediate: yes
+...

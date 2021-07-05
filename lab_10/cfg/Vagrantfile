@@ -1,0 +1,69 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+home = ENV['HOME']
+ENV["LC_ALL"] = "en_US.UTF-8"
+
+MACHINES = {
+  :sd => {
+        :box_name => "centos/7",
+        :ip_addr => '172.16.0.100',
+        }
+    }
+
+Vagrant.configure("2") do |config|
+
+    MACHINES.each do |boxname, boxconfig|
+  
+        config.vm.define boxname do |box|
+  
+            box.vm.box = boxconfig[:box_name]
+            box.vm.host_name = boxname.to_s
+  
+            box.vm.network "private_network", ip: boxconfig[:ip_addr]
+  
+            box.vm.provider :virtualbox do |vb|
+                    vb.customize ["modifyvm", :id, "--memory", "256"]
+            end
+
+            box.vm.provision "shell", inline: <<-SHELL
+                mkdir -p ~root/.ssh
+                cp ~vagrant/.ssh/auth* ~root/.ssh
+            SHELL
+            
+            #p1
+            box.vm.provision "file", source: "./files/p1/watchlog", destination: "/tmp/watchlog"
+            box.vm.provision "file", source: "./files/p1/watchlog.log", destination: "/tmp/watchlog.log"
+            box.vm.provision "file", source: "./files/p1/watchlog.sh", destination: "/tmp/watchlog.sh"
+            box.vm.provision "file", source: "./files/p1/watchlog.service", destination: "/tmp/watchlog.service"
+            box.vm.provision "file", source: "./files/p1/watchlog.timer", destination: "/tmp/watchlog.timer"
+            box.vm.provision "shell", inline: "mv /tmp/watchlog /etc/sysconfig/watchlog"
+            box.vm.provision "shell", inline: "mv /tmp/watchlog.log /var/log/watchlog.log"
+            box.vm.provision "shell", inline: "mv /tmp/watchlog.sh /opt/watchlog.sh"
+            box.vm.provision "shell", inline: "mv /tmp/watchlog.service /etc/systemd/system/watchlog.service"
+            box.vm.provision "shell", inline: "mv /tmp/watchlog.timer /etc/systemd/system/watchlog.timer"
+            box.vm.provision "shell", inline: "systemctl daemon-reload && systemctl start watchlog.timer"
+            
+            #p2
+            box.vm.provision "shell", inline: "yum install epel-release -y; yum install spawn-fcgi php php-cli mod_fcgid httpd -y"
+            box.vm.provision "file", source: "./files/p2/spawn-fcgi", destination: "/tmp/spawn-fcgi"
+            box.vm.provision "file", source: "./files/p2/spawn-fcgi.service", destination: "/tmp/spawn-fcgi.service"
+            box.vm.provision "shell", inline: "mv /tmp/spawn-fcgi /etc/sysconfig/spawn-fcgi"
+            box.vm.provision "shell", inline: "mv /tmp/spawn-fcgi.service /etc/systemd/system/spawn-fcgi.service"
+            box.vm.provision "shell", inline: "systemctl daemon-reload && systemctl start spawn-fcgi && systemctl status spawn-fcgi"
+            
+            #p3
+            box.vm.provision "file", source: "./files/p3/httpd.service", destination: "/tmp/httpd.service"
+            box.vm.provision "file", source: "./files/p3/httpd-first", destination: "/tmp/httpd-first"
+            box.vm.provision "file", source: "./files/p3/httpd-second", destination: "/tmp/httpd-second"
+            box.vm.provision "shell", inline: "mv /tmp/httpd-first /etc/sysconfig/httpd-first"
+            box.vm.provision "shell", inline: "mv /tmp/httpd-second /etc/sysconfig/httpd-second"
+            box.vm.provision "shell", inline: "cp /etc/httpd/conf/httpd.conf /etc/httpd/conf/first.conf"
+            box.vm.provision "shell", inline: "cp /etc/httpd/conf/httpd.conf /etc/httpd/conf/second.conf"
+            box.vm.provision "shell", inline: "sed -i 's/Listen 80/Listen 8080/g' /etc/httpd/conf/second.conf"
+            box.vm.provision "shell", inline: "echo 'PidFile /var/run/httpd-second.pid' >> /etc/httpd/conf/second.conf"
+            box.vm.provision "shell", inline: "mv /tmp/httpd.service /etc/systemd/system/httpd@.service"
+            box.vm.provision "shell", inline: "systemctl daemon-reload && systemctl start httpd@first && systemctl start httpd@second"
+            box.vm.provision "shell", inline: "ss -tulpen | grep httpd"
+        end
+    end
+end

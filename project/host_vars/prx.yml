@@ -1,0 +1,15 @@
+---
+logs:
+ - name: Nginx access
+   path: /var/log/nginx/access.log
+   tag: prx_acc_
+ - name: Nginx error
+   path: /var/log/nginx/error.log
+   tag: prx_err_
+ - name: Netdata logs acc
+   path: /var/log/netdata/access.log
+   tag: prx_mon_acc_
+ - name: Netdata logs err
+   path: /var/log/netdata/error.log
+   tag: prx_mon_err_
+...

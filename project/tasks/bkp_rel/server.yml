@@ -1,0 +1,8 @@
+---
+  - name: Create catalog for backups
+    file:
+      path: "{{ bkp_main_cat }}"
+      owner: "{{ bkp_remote_user }}"
+      mode: 0750
+      state: directory
+...

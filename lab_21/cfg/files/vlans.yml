@@ -1,0 +1,27 @@
+---
+- hosts: test*
+  become: yes
+  tasks:
+  - name: Creating vlan 
+    community.general.nmcli:
+      type: vlan
+      vlanid: "{{ vlanid }}"
+      vlandev: "{{ interface }}"
+      conn_name: "vlan{{ vlanid }}"
+      ip4: "{{ ip_addr }}"
+      gw4: "{{ gateway }}"
+      state: present
+
+- hosts: office1Router
+  become: yes
+  tasks:
+  - name: Creating vlans
+    community.general.nmcli:
+      type: vlan
+      vlanid: "{{ item.vlanid }}"
+      vlandev: "{{ item.interface }}"
+      conn_name: "vlan{{ item.vlanid }}"
+      ip4: "{{ item.ip_addr }}"
+      state: present
+    with_items:
+    - "{{ vlans }}"

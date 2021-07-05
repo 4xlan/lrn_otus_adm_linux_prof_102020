@@ -1,0 +1,93 @@
+---
+- name: Check Python3 presence
+  yum: 
+    name: python3
+    state: present
+- name: Create catalogs for files
+  file:
+    path: "{{ item }}"
+    state: directory
+    recurse: yes
+  with_items:
+    - "/opt/nextcloud"
+    - "/opt/nextcloud/data"
+    - "/opt/nextcloud/apps"
+    - "/opt/nextcloud/config"
+- name: Open port
+  firewalld:
+    zone: public
+    port: 80/tcp
+    state: enabled
+    immediate: yes
+    permanent: yes
+- name: Copy post-install script
+  template:
+    src: nxt/post_install_hooks.py.j2
+    dest: /tmp/script.py
+    mode: 0755
+- name: Nextcloud install
+  containers.podman.podman_container:
+    name: nextcloud_srv
+    image: nextcloud:latest
+    state: started
+    restart_policy: "on-failure"
+    ports: "80:80"
+    volume:
+      - "/opt/nextcloud:/var/www/html:z"
+      - "/opt/nextcloud/apps:/var/www/html/apps:z"
+      - "/opt/nextcloud/config:/var/www/html/config:z"
+      - "/opt/nextcloud/data:/var/www/html/data:z"
+    env:
+      POSTGRES_HOST: "{{ nextcloud_dbs_addr }}"
+      POSTGRES_DB: "{{ nextcloud_dbs_name }}"
+      POSTGRES_USER: "{{ nextcloud_dbs_user }}"
+      POSTGRES_PASSWORD: "{{ postgres_nextcloud_pass }}"
+- name: MSG before copy
+  debug:
+    msg: "Monitoring module has been taken from https://github.com/arnowelzel/netdata-nextcloud"
+- name: Copy script for monitoring plugin
+  copy:
+    src: nxt/monfiles/nextcloud.chart.py
+    dest: /usr/libexec/netdata/python.d/nextcloud.chart.py
+- name: Copy config for monitoring plugin
+  template:
+    src: nxt/monfiles/nextcloud.conf.j2
+    dest: /etc/netdata/python.d/nextcloud.conf
+- name: Copy health conf for monitoring plugin
+  copy:
+    src: nxt/monfiles/health.d/nextcloud.conf
+    dest: /etc/netdata/health.d/nextcloud.conf
+- name: Pause for 30 sec just to be sure that app is started.
+  pause:
+    seconds: 30
+- name: User action is needed
+  debug:
+    msg: "Please, procced with the first run wizard (https://localhost:8443)."
+- name: Wait for config.php
+  wait_for:
+    path: /opt/nextcloud/config/config.php
+    state: present
+    timeout: 9000
+- name: Pause for 30 sec just to be sure that app is finished with setup.
+  pause:
+    seconds: 30
+- name: Start post-install script
+  shell: "nohup /tmp/script.py &"
+- name: Wait for post install check
+  pause:
+    seconds: 3
+- name: Wait for post install script
+  wait_for:
+    path: /opt/nextcloud/config/ph_done
+    state: present
+    timeout: 120
+- name: Restart Netdata
+  service:
+    name: netdata
+    state: restarted
+    enabled: true
+- name: Restart Nextcloud
+  containers.podman.podman_container:
+    name: nextcloud_srv
+    restart: true
+...

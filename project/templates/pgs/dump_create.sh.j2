@@ -1,0 +1,8 @@
+#!/bin/bash
+
+PFILE="{{ bkp_pfile_dump }}"
+
+touch $PFILE
+podman exec -u postgres -it db_next bash -c pg_dumpall -d nextcloud_db -E UTF-8 > {{ bkp_src_cat }}/pg_dump.sql
+chown -R borg:borg {{ bkp_src_cat }}/*
+rm $PFILE

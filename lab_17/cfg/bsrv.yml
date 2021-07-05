@@ -1,0 +1,60 @@
+---
+ - name: Find volume
+   set_fact:
+     bckp_volume: "{{ item.key }}"
+   with_dict: "{{ ansible_devices }}"
+   no_log: true
+   when: "item.value.size == '2.00 GB'"
+   
+ - name: Create partition
+   community.general.parted:
+     device: "/dev/{{ bckp_volume }}"
+     number: 1
+     state: present
+     
+ - name: Format partition
+   community.general.filesystem:
+     device: "/dev/{{ bckp_volume }}1"
+     fstype: ext4
+     state: present
+
+ - name: Create place for mount
+   file:
+     path: "{{ backup_catalog }}"
+     state: directory
+     mode: 0755
+ 
+ - name: Mount partition
+   ansible.posix.mount:
+     path: "{{ backup_catalog }}"
+     src: "/dev/{{ bckp_volume }}1"
+     state: mounted
+     fstype: ext4
+
+ - name: Create user
+   user:
+     name: "{{ username }}"
+     
+ - name: Create ssh catalog
+   file:
+     path: "/home/{{ username }}/.ssh"
+     state: directory
+     mode: 0700
+     owner: "{{ username }}"
+     group: "{{ username }}"
+ 
+ - name: Copy authorized_keys file
+   copy:
+     src: "files/authorized_keys"
+     dest: "/home/{{ username }}/.ssh/"
+     owner: "{{ username }}"
+     group: "{{ username }}"
+     mode: 0600
+     
+ - name: Set owner of {{ backup_catalog }} catalog
+   file:
+     path: "{{ backup_catalog }}"
+     owner: borg
+     group: borg
+     recurse: yes
+...

@@ -1,0 +1,20 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+  - name: Creating bond 
+    community.general.nmcli:
+      type: bond
+      conn_name: "{{ connection_name }}"
+      ip4: "{{ ip_addr }}"
+      gw4: "{{ gateway }}"
+      state: present
+  - name: Adding ifaces to bond
+    community.general.nmcli:
+      type: bond-slave
+      conn_name: "{{ item.conn_name }}"
+      ifname: "{{ item.ifname }}"
+      master: "{{ item.master }}"
+      state: present
+    with_items:
+    - "{{ bond_slave }}"

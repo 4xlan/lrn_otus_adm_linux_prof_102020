@@ -1,0 +1,10 @@
+version: '3.7'
+services:
+  servicename:
+    image: 4xlan/tmp-otus-l14-lab:0.1
+    volumes:
+      - site_data:/var/www/html
+    ports:
+      - "80:80"
+volumes:
+  site_data:

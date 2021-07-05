@@ -1,0 +1,32 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: Packages install
+    yum:
+      name: "{{ item }}"
+      state: present
+      update_cache: yes
+    loop:
+      - rsyslog
+      - audispd-plugins
+  - name: Firewalld enable
+    systemd:
+      name: firewalld
+      state: started
+      enabled: true
+  - name: Web machine part
+    include_tasks: web.yml
+    when: "'webserver' in group_names"
+  - name: Log machine part
+    include_tasks: log.yml
+    when: "'logserver' in group_names"
+  - name: Rsyslog restart
+    service:
+      name: rsyslog
+      enabled: true
+      state: restarted
+...
+
+
+

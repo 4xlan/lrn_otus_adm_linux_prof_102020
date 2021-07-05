@@ -1,0 +1,34 @@
+---
+- name: Copy script for sending
+  template:
+    src: pgs/backup_send.sh.j2
+    dest: "{{ bkp_script_path }}/send.sh"
+    owner: "{{ bkp_remote_user }}"
+    mode: 0750
+- name: Copy script for dump
+  template:
+    src: pgs/dump_create.sh.j2
+    dest: "{{ bkp_script_path }}/create.sh"
+    owner: "{{ bkp_remote_user }}"
+    mode: 0750
+- name: Add job for dump creating
+  cron:
+    name: PGDump NXT DB
+    user: root
+    job: "{{ bkp_script_path}}/create.sh > /dev/null 2>&1"
+    minute: 0
+    hour: 0
+    day: "*"
+    month: "*"
+    weekday: "*"
+- name: Add job for dump sending
+  cron:
+    name: Send PGDump NXT DB to Borg
+    user: borg
+    job: "{{ bkp_script_path}}/send.sh > /dev/null 2>&1"
+    minute: 5
+    hour: 0
+    day: "*"
+    month: "*"
+    weekday: "*"
+...

@@ -1,0 +1,66 @@
+--- 
+ - name: Create place for script
+   file:
+     path: "{{ script_catalog }}"
+     state: directory
+     owner: "{{ username }}"
+     group: "{{ username }}"
+     mode: 0755
+
+ - name: Move script
+   template:
+     src: backup.sh.j2
+     dest: "{{ script_catalog }}/backup.sh"
+     owner: "{{ username }}"
+     group: "{{ username }}"
+     mode: 0775
+     
+ - name: Create .ssh catalog
+   file:
+     path: "/{{ username }}/.ssh"
+     state: directory
+     mode: 0760
+     owner: "{{ username }}"
+     group: "{{ username }}"
+     
+ - name: Copy SSH keys
+   copy:
+     src: "{{ item }}"
+     dest: "/{{ username }}/.ssh/"
+     mode: 0600
+     owner: "{{ username }}"
+     group: "{{ username }}"
+   with_items:
+   - id_ecdsa
+   - id_ecdsa.pub
+   
+ - name: Copy ssh-config
+   template:
+     src: ssh_config.j2
+     dest: "/{{ username }}/.ssh/config"
+     owner: "{{ username }}"
+
+ - name: Copy key for enc
+   copy:
+     src: borg_passphrase
+     dest: "/{{ username }}/.borg-passphrase"
+     mode: 0400
+     owner: "{{ username }}"
+     group: "{{ username }}"
+
+ - name: Init repo
+   shell: BORG_PASSCOMMAND="cat $HOME/.borg-passphrase" borg init --encryption repokey-blake2 {{ remote_username }}@{{ backup_host }}:{{ backup_catalog }}{{ backup_src }}
+
+ - name: Crontab update
+   cron:
+     name: "Backup"
+     hour: "*"
+     minute: "*/5"
+     day: "*"
+     month: "*"
+     weekday: "*"
+     job: "{{ script_catalog }}/backup.sh"
+     user: "{{ username }}"
+     
+ 
+...

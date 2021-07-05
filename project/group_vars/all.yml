@@ -1,0 +1,9 @@
+---
+log_srv: "192.168.50.14"
+mon_srv: "192.168.50.13"
+bkp_remote_user: "borg"
+bkp_main_cat: "/opt/borg/bckp/"
+nextcloud_server_ip: "192.168.50.11"
+nextcloud_dbs_name: "nextcloud"
+nextcloud_dbs_user: "nextcloud_user"
+...

@@ -1,0 +1,16 @@
+---
+postgres_postgresu_dbname: postgres
+postgres_postgresu_username: postgres
+postgres_postgresu_mountpath: "/opt/postgres/data"
+bkp_rem_dst: "pgs_db_bckp"
+logs:
+ - name: Postgres
+   path: /opt/postgres/data/log/pglog.csv
+   tag: pgs_
+ - name: Netdata logs acc
+   path: /var/log/netdata/access.log
+   tag: pgs_mon_acc_
+ - name: Netdata logs err
+   path: /var/log/netdata/error.log
+   tag: pgs_mon_err_
+...

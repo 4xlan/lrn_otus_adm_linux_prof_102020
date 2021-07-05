@@ -1,0 +1,10 @@
+---
+- name: Podman install
+  dnf:
+    name: podman
+    state: present
+- name: Fix repos
+  copy:
+    src: pdm_rel/registries.conf
+    dest: /etc/containers/registries.conf
+...

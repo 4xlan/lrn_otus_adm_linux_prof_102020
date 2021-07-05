@@ -1,0 +1,6 @@
+bkp_srv: "192.168.50.9"
+bkp_script_path: "/opt/borg"
+bkp_passphrase_path: "/home/{{ bkp_remote_user }}/.borg_pphrase"
+bkp_borg_passcommand: "cat {{ bkp_passphrase_path }}"
+bkp_src_cat: "{{ bkp_script_path }}/bckp"
+bkp_pfile_dump: "/tmp/pfile.dmp"

@@ -1,0 +1,2 @@
+#!/bin/bash
+ipa-server-install -U -r {{ realm }} -n {{ domain }} -p {{ dsu_unsec_pswd }} -a {{ adm_unsec_pswd }} --hostname={{ hostname }} --ip-address={{ dsip }} --setup-dns --auto-forwarders --no-reverse

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+USER="{{ remote_username }}"
+HOST="{{ backup_host }}"
+BCKP_DESC=etc
+
+export BORG_PASSCOMMAND="cat $HOME/.borg-passphrase"
+
+REPO=$USER@$HOST:"{{ backup_catalog }}"/$BCKP_DESC
+
+borg create -v --stats $REPO::'{now:%Y-%m-%d_%H-%M}' "/{{ backup_src }}"
+borg prune -v --show-rc --list $REPO --keep-daily=90 --keep-monthly=12
+
+export BORG_PASSCOMMAND=""

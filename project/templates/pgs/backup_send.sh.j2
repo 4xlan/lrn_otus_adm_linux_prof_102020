@@ -1,0 +1,17 @@
+#!/bin/bash
+
+USER="{{ bkp_remote_user }}"
+HOST="{{ bkp_srv }}"
+REPO=$USER@$HOST:"{{ bkp_main_cat }}{{ bkp_rem_dst }}"
+PFILE="{{ bkp_pfile_dump }}"
+SLEEPTM=5
+
+while [ -f $PFILE ]; do
+    sleep $SLEEPTM
+done
+
+export BORG_PASSCOMMAND="{{ bkp_borg_passcommand }}"
+borg create -v --stats $REPO::'{now:%Y-%m-%d_%H-%M}' "{{ bkp_src_cat }}"
+borg prune -v --show-rc --list $REPO --keep-daily=30 --keep-monthly=6
+
+export BORG_PASSCOMMAND=""

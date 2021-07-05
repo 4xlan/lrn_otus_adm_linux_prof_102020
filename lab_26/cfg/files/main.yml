@@ -1,0 +1,72 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: Disable SELinux
+    ansible.posix.selinux:
+      policy: targeted
+      state: permissive
+
+  - name: EPEL install
+    dnf:
+      name: epel-release
+      state: present
+
+  - name: PKGS install
+    dnf:
+      name: ['nginx', 'golang']
+      state: present
+
+  - name: Create dirs
+    file:
+      path: "{{ item.app_path }}"
+      state: directory
+      owner: nginx
+      group: nginx
+    with_items: 
+      - "{{ apps }}"
+
+  - name: Generate src files
+    template: 
+      src: main.go.j2
+      dest: "{{ item.app_path }}{{ item.name }}.go"
+      owner: nginx
+      group: nginx
+      mode: 0755
+    with_items: 
+      - "{{ apps }}"
+
+  - name: Generate exec
+    shell: "cd {{ item.app_path }} && go build {{ item.name }}.go"
+    with_items:
+      - "{{ apps }}"
+
+  - name: Generate units
+    template:
+      src: app.unit.j2
+      dest: "/etc/systemd/system/{{ item.name }}.service"
+    with_items: 
+      - "{{ apps }}"
+
+  - name: Start services
+    systemd:
+      name: "{{ item.name }}.service"
+      daemon_reload: yes
+      enabled: yes
+      state: started
+    with_items: 
+      - "{{ apps }}"
+
+  - name: Generate Nginx config
+    template:
+      src: nginx.conf.j2
+      dest: /etc/nginx/nginx.conf
+      owner: nginx
+      group: nginx
+
+  - name: Start nginx
+    service:
+      name: nginx
+      state: restarted
+      enabled: true
+...

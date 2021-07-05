@@ -1,0 +1,15 @@
+all:
+  hosts:
+  children:
+    webserver:
+      hosts:
+        192.168.11.150
+      vars:
+        ansible_port: 2222
+        ansible_private_key_file: .vagrant/machines/web/virtualbox/private_key
+    logserver:
+      hosts:
+        192.168.11.160  
+      vars:
+        ansible_port: 2220
+        ansible_private_key_file: .vagrant/machines/log/virtualbox/private_key

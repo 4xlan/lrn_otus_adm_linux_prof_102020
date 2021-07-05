@@ -1,0 +1,16 @@
+---
+- name: Fix permissions for web
+  file:
+    path: /usr/share/netdata/web
+    recurse: yes
+    owner: root
+    group: netdata
+- name: Copy config
+  template:
+    src: mon_rel/netdata_server.conf.j2
+    dest: /etc/netdata/netdata.conf
+- name: Enable metrics recieving
+  template:
+    src: mon_rel/netdata_server_stream.conf.j2
+    dest: /etc/netdata/conf.d/stream.conf
+...

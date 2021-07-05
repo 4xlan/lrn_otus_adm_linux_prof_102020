@@ -1,0 +1,8 @@
+#!/bin/bash
+
+PFILE="{{ bkp_pfile_dump }}"
+
+touch $PFILE
+tar -czvf {{ bkp_src_cat }}/nxt_bckp.tar.gz {{ bkp_nxt_path }}
+chown -R borg:borg {{ bkp_src_cat }}/*
+rm $PFILE
